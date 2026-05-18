@@ -1,0 +1,72 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[top=1.8cm, bottom=1.8cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{bm}
+
+\setstretch{1.15}
+
+\titleformat{\section}{\normalfont\bfseries\normalsize}{\thesection.}{0.5em}{}
+\titlespacing{\section}{0pt}{5pt}{2pt}
+
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\begin{center}
+    {\large\bfseries Relatório Analítico: Algoritmo PageRank}\\[2pt]
+    {\small Nome: Deivid Mark Brayan Gomes Andrade \quad|\quad Matrícula: 2023093222}
+\end{center}
+
+\vspace{3pt}
+\hrule
+\vspace{5pt}
+
+\section{Comparação de Métodos: Amostragem vs.\ Método da Potência}
+
+Ambos os métodos produziram resultados convergentes, conforme esperado pela teoria. A tabela abaixo sintetiza os valores obtidos:
+
+\begin{center}
+\small
+\setstretch{1.0}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Página} & \textbf{Amostragem} & \textbf{Iteração} \\
+\midrule
+portal\_gamer.html  & 0.2246 & 0.2202 \\
+guia\_rpg.html      & 0.2040 & 0.1975 \\
+forum\_gamer.html   & 0.1921 & 0.1975 \\
+guia\_mmorpg.html   & 0.1137 & 0.1145 \\
+discord\_gamer.html & 0.1124 & 0.1145 \\
+review\_gta.html    & 0.0797 & 0.0778 \\
+review\_zelda.html  & 0.0735 & 0.0778 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+As divergências (máx.\ $\approx 0{,}005$) são atribuídas à variância residual $O(1/\sqrt{n})$ da amostragem por Random Walk com $n=10{.}000$. À luz da Lei dos Grandes Números, as simetrias exatas do método iterativo --- como \texttt{guia\_rpg} e \texttt{forum\_gamer} em 0.1975 --- não se manifestam perfeitamente na amostragem devido a esse ruído estocástico. Em essência, ambos os métodos convergem para o mesmo vetor estacionário $\mathbf{r}$ da cadeia de Markov definida pela matriz de transição, validando a corretude das implementações.
+
+\section{Impacto do Fator de Amortecimento}
+
+O fator $d$ controla a mistura entre a navegação por links e a teleportação aleatória. Na equação iterativa $\mathbf{r} = d \cdot M\mathbf{r} + \frac{1-d}{N}\mathbf{1}$, ele determina o raio espectral da matriz modificada: quanto maior o valor de $d$, mais lenta é a convergência, pois o autovalor dominante se aproxima de 1.
+
+\textbf{Se $d \to 0$:} a teleportação domina e o vetor $\mathbf{r}$ converge para $1/N$ uniformemente em todas as páginas — a topologia da rede torna-se irrelevante. \textbf{Se $d \to 1$:} a teleportação desaparece e o modelo fica suscetível a armadilhas topológicas como ciclos isolados ou nós sorvedouros (\textit{dangling nodes}), gerando instabilidade ou não convergência. O valor canônico $d = 0{,}85$ preserva a influência topológica, garantindo a irredutibilidade e a ergodicidade da cadeia.
+
+\section{Análise do Corpus: Mini Web Gamer}
+
+A página \texttt{portal\_gamer.html} obteve o maior PageRank (0.22) por atuar como o principal \textit{hub} do sistema, concentrando múltiplos links de entrada vindos de páginas de alta relevância. Sob a ótica da álgebra linear, o PageRank mapeia o autovetor dominante de $M$: nós que recebem fluxo de páginas já bem ranqueadas herdam e acumulam essa importância por propagação espectral.
+
+Os ciclos isolados (\texttt{guia\_rpg $\leftrightarrow$ guia\_mmorpg} e \texttt{forum $\leftrightarrow$ discord}) retêm e redistribuem rank predominantemente entre si, o que justifica seus valores moderados e simétricos. Por fim, a página \texttt{review\_gta.html}, configurando-se como um \textit{dead end}, absorve rank do sistema mas, por não possuir links de saída, é incapaz de propagar sua influência diretamente, dependendo exclusivamente da teleportação aleatória para redistribuir sua massa estocástica.
+
+\end{document}
